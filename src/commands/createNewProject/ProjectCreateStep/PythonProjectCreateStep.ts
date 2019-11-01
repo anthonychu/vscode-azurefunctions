@@ -124,17 +124,23 @@ async function getPythonAlias(): Promise<string> {
         aliasesToTry.unshift(globalPythonPathSetting);
     }
 
+    let defaultAlias: string = "";
     for (const alias of aliasesToTry) {
         // Validate max version when silently picking the alias for the user
         const errorMessage: string | undefined = await validatePythonAlias(alias, true /* validateMaxVersion */);
         if (!errorMessage) {
-            return alias;
+            defaultAlias = alias;
+            break;
         }
     }
 
-    const prompt: string = localize('pyAliasPlaceholder', 'Enter the alias or full path of the Python "{0}" executable to use.', minPythonVersionLabel);
+    const prompt: string = localize('pyAliasPlaceholder', 'Enter the alias or full path of the Python executable to use.', minPythonVersionLabel);
     // Don't validate max version when prompting (because the Functions team will assumably support 3.7+ at some point and we don't want to block people from using that)
-    return await ext.ui.showInputBox({ prompt, validateInput: validatePythonAlias });
+    return await ext.ui.showInputBox({
+        prompt,
+        validateInput: validatePythonAlias,
+        value: defaultAlias
+    });
 }
 
 export async function createVirtualEnviornment(venvName: string, projectPath: string): Promise<void> {
